@@ -39,7 +39,7 @@ DB.connect((err) => {
 
 // Routes
 app.get('/', (req, res) => {
-    res.send('Welcome to the Todo List API!');
+    res.send('<h1 style="text-align: center;">Welcome to the Todo List API!</h1>');
 });
 
 app.get('/todos', async (req, res) => {
