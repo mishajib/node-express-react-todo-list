@@ -4,7 +4,7 @@ import {useEffect, useState} from "react";
 
 const App = () => {
     // Backend API URL
-    const baseUrl = 'http://localhost:5000';
+    const baseUrl = 'http://localhost:5000/todos';
 
     const [todos, setTodos]             = useState([]);
     const [title, setTitle]             = useState('');

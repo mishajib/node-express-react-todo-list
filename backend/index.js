@@ -13,7 +13,6 @@ app.use(express.json());
 
 // Redis setup
 let redisClient;
-
 (async () => {
     redisClient = redis.createClient();
 
@@ -32,12 +31,18 @@ const DB = mysql.createConnection({
     database: 'todo_list',
 });
 
+// Connect to MySQL
 DB.connect((err) => {
     if (err) throw err;
     console.log('MySQL connected');
 });
 
-app.get('/', async (req, res) => {
+// Routes
+app.get('/', (req, res) => {
+    res.send('Welcome to the Todo List API!');
+});
+
+app.get('/todos', async (req, res) => {
     try {
         const cachedData = await redisClient.get('todos');
         if (cachedData) {
@@ -75,7 +80,7 @@ app.get('/', async (req, res) => {
     }
 });
 
-app.post('/', (req, res) => {
+app.post('/todos', (req, res) => {
     // Get data from request body
     const {title, description} = req.body;
 
@@ -104,7 +109,7 @@ app.post('/', (req, res) => {
     });
 });
 
-app.put('/:id', (req, res) => {
+app.put('/todos/:id', (req, res) => {
     // Get data from request body
     const {title, description} = req.body;
 
@@ -132,7 +137,7 @@ app.put('/:id', (req, res) => {
     });
 });
 
-app.delete('/:id', (req, res) => {
+app.delete('/todos/:id', (req, res) => {
     DB.query('DELETE FROM todos WHERE id = ?', [req.params.id], (err, results) => {
         if (err) throw err;
 
