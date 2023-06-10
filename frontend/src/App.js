@@ -11,14 +11,24 @@ const App = () => {
     const [description, setDescription] = useState('');
     const [todoId, setTodoId]           = useState(null);
     const [isEdit, setIsEdit]           = useState(false);
+    const [successMsg, setSuccessMsg]   = useState(null);
+    const [errorMsg, setErrorMsg]       = useState(null);
 
     // Fetch all todos
     const getTodos = async () => {
         try {
             const response = await axios.get(`${baseUrl}`);
             setTodos(response.data.data);
+
+            // Show success message
+            setSuccessMsg(response.data.message);
         } catch (error) {
             console.log(error.response);
+
+            // Show error message
+            setErrorMsg(error.response.data.message);
+        } finally {
+            hideMsg();
         }
     };
 
@@ -30,8 +40,15 @@ const App = () => {
             setTodos([...todos, response.data.data]);
             setTitle('');
             setDescription('');
+
+            // Show success message
+            setSuccessMsg(response.data.message);
         } catch (error) {
             console.log(error.response);
+            // Show error message
+            setErrorMsg(error.response.data.message);
+        } finally {
+            hideMsg();
         }
     };
 
@@ -53,7 +70,7 @@ const App = () => {
     const updateTodoHandler = async (e) => {
         e.preventDefault();
         try {
-            await axios.put(`${baseUrl}/${todoId}`, {title, description});
+            const response     = await axios.put(`${baseUrl}/${todoId}`, {title, description});
             const updatedTodos = todos.map(todo => {
                 if (todo.id === todoId) {
                     todo.title       = title;
@@ -66,19 +83,33 @@ const App = () => {
             setDescription('');
             setTodoId(null);
             setIsEdit(false);
+
+            // Show success message
+            setSuccessMsg(response.data.message);
         } catch (error) {
             console.log(error.response);
+            // Show error message
+            setErrorMsg(error.response.data.message);
+        } finally {
+            hideMsg();
         }
     };
 
     // Delete todo
     const deleteTodoHandler = async (id) => {
         try {
-            await axios.delete(`${baseUrl}/${id}`);
+            const response      = await axios.delete(`${baseUrl}/${id}`);
             const filteredTodos = todos.filter(todo => todo.id !== id);
             setTodos(filteredTodos);
+
+            // Show success message
+            setSuccessMsg(response.data.message);
         } catch (error) {
             console.log(error.response);
+            // Show error message
+            setErrorMsg(error.response.data.message);
+        } finally {
+            hideMsg();
         }
     };
 
@@ -91,6 +122,14 @@ const App = () => {
         }
     };
 
+    // Hide success/error message after 5 seconds
+    const hideMsg = () => {
+        setTimeout(() => {
+            setSuccessMsg(null);
+            setErrorMsg(null);
+        }, 5000);
+    };
+
 
     useEffect(() => {
         getTodos();
@@ -101,7 +140,7 @@ const App = () => {
             <h1 className="h1 text-center">Todo APP</h1>
             <div className="row justify-content-center">
                 <div className="col-md-8">
-                    <div className="card">
+                    <div className="card mb-4">
                         <div className="card-header">
                             <h4 className="card-title">
                                 Add Todo
@@ -139,6 +178,18 @@ const App = () => {
                             </div>
                         </form>
                     </div>
+
+                    {successMsg &&
+                        <div className="alert alert-success" role="alert">
+                            {successMsg}
+                        </div>
+                    }
+
+                    {errorMsg &&
+                        <div className="alert alert-danger" role="alert">
+                            {errorMsg}
+                        </div>
+                    }
                 </div>
             </div>
 

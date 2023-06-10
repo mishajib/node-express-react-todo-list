@@ -72,7 +72,7 @@ app.get('/todos', async (req, res) => {
 
         return res.send({
             success: true,
-            message: 'Todos retrieved successfully!',
+            message: 'Todos retrieved from database successfully!',
             data   : results
         });
     } catch (error) {
