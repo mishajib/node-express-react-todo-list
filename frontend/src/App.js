@@ -17,7 +17,10 @@ const App = () => {
     // Fetch all todos
     const getTodos = async () => {
         try {
+            // Fetch data from backend
             const response = await axios.get(`${baseUrl}`);
+
+            // Set todos data to todos state
             setTodos(response.data.data);
 
             // Show success message
@@ -28,16 +31,23 @@ const App = () => {
             // Show error message
             setErrorMsg(error.response.data.message);
         } finally {
+            // Hide success/error message after 5 seconds
             hideMsg();
         }
     };
 
     // Add new todo
     const addTodoHandler = async (e) => {
+        // Prevent default form submission
         e.preventDefault();
         try {
+            // Send post request to backend by sending title and description
             const response = await axios.post(`${baseUrl}`, {title, description});
+
+            // Add new todo and update todos state
             setTodos([...todos, response.data.data]);
+
+            // Reset todo form
             setTitle('');
             setDescription('');
 
@@ -48,6 +58,7 @@ const App = () => {
             // Show error message
             setErrorMsg(error.response.data.message);
         } finally {
+            // Hide success/error message after 5 seconds
             hideMsg();
         }
     };
@@ -61,16 +72,22 @@ const App = () => {
 
     // Edit todo
     const editTodoHandler = async (todo) => {
+        // Set todo data to todo form
         setTitle(todo.title);
         setDescription(todo.description);
         setTodoId(todo.id);
         setIsEdit(true);
     };
 
+    // Update todo
     const updateTodoHandler = async (e) => {
+        // Prevent default form submission
         e.preventDefault();
         try {
+            // Send put request to backend by sending title and description
             const response     = await axios.put(`${baseUrl}/${todoId}`, {title, description});
+
+            // Update todo in todos state
             const updatedTodos = todos.map(todo => {
                 if (todo.id === todoId) {
                     todo.title       = title;
@@ -78,7 +95,11 @@ const App = () => {
                 }
                 return todo;
             });
+
+            // Update todos state
             setTodos(updatedTodos);
+
+            // Reset todo form
             setTitle('');
             setDescription('');
             setTodoId(null);
@@ -91,6 +112,7 @@ const App = () => {
             // Show error message
             setErrorMsg(error.response.data.message);
         } finally {
+            // Hide success/error message after 5 seconds
             hideMsg();
         }
     };
@@ -98,8 +120,13 @@ const App = () => {
     // Delete todo
     const deleteTodoHandler = async (id) => {
         try {
+            // Send delete request to backend
             const response      = await axios.delete(`${baseUrl}/${id}`);
+
+            // Remove todo from todos state
             const filteredTodos = todos.filter(todo => todo.id !== id);
+
+            // Update todos state
             setTodos(filteredTodos);
 
             // Show success message
@@ -109,12 +136,14 @@ const App = () => {
             // Show error message
             setErrorMsg(error.response.data.message);
         } finally {
+            // Hide success/error message after 5 seconds
             hideMsg();
         }
     };
 
     // Submit handler
     const submitHandler = async (e) => {
+        // Conditionally call addTodoHandler or updateTodoHandler
         if (isEdit) {
             await updateTodoHandler(e);
         } else {
@@ -131,6 +160,7 @@ const App = () => {
     };
 
 
+    // Fetch all todos on page load or component mounted
     useEffect(() => {
         getTodos();
     }, []);

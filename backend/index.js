@@ -4,11 +4,13 @@ const app     = express();
 const mysql   = require('mysql');
 const redis   = require('redis');
 
+// Set up CORS
 const corsOptions = {
     origin: "http://localhost:3000"
 };
-
 app.use(cors(corsOptions));
+
+// Set json for getting data from request body
 app.use(express.json());
 
 // Redis setup
@@ -42,8 +44,10 @@ app.get('/', (req, res) => {
     res.send('<h1 style="text-align: center;">Welcome to the Todo List API!</h1>');
 });
 
+// Fetching data from Database or Redis
 app.get('/todos', async (req, res) => {
     try {
+        // Check if cached data exists in Redis or not. If yes, return cached data
         const cachedData = await redisClient.get('todos');
         if (cachedData) {
             return res.send({
@@ -53,6 +57,7 @@ app.get('/todos', async (req, res) => {
             });
         }
 
+        // If cached data doesn't exist, fetch data from database and cache it
         const results = await new Promise((resolve, reject) => {
             DB.query('SELECT * FROM todos', (err, results) => {
                 if (err) reject(err);
@@ -60,6 +65,7 @@ app.get('/todos', async (req, res) => {
             });
         });
 
+        // If no data found in database, return error message
         if (!results.length) {
             return res.send({
                 success: false,
@@ -68,25 +74,31 @@ app.get('/todos', async (req, res) => {
             });
         }
 
+        // Cache data in Redis for 1 hour (3600 seconds)
         redisClient.setEx('todos', 3600, JSON.stringify(results));
 
+        // Return response
         return res.send({
             success: true,
             message: 'Todos retrieved from database successfully!',
             data   : results
         });
-    } catch (error) {
+    } catch (error) { // Catch any error
         throw error;
     }
 });
 
+
+// Create new todo/ Add todo
 app.post('/todos', (req, res) => {
     // Get data from request body
     const {title, description} = req.body;
 
+    // Insert todo into database
     DB.query('INSERT INTO todos (title, description) VALUES (?, ?)', [title, description], (err, results) => {
-        if (err) throw err;
+        if (err) throw err; // Throw error if any
 
+        // If no rows affected, then todo not inserted
         if (!results.affectedRows) {
             return res.send({
                 success: false,
@@ -95,8 +107,10 @@ app.post('/todos', (req, res) => {
             });
         }
 
+        // Delete cached data from Redis
         redisClient.del('todos');
 
+        // Return response
         return res.send({
             success: true,
             message: 'Todo added successfully!',
@@ -109,13 +123,16 @@ app.post('/todos', (req, res) => {
     });
 });
 
+// Update todo
 app.put('/todos/:id', (req, res) => {
     // Get data from request body
     const {title, description} = req.body;
 
+    // Update todo in database
     DB.query('UPDATE todos SET title = ?, description = ? WHERE id = ?', [title, description, req.params.id], (err, results) => {
-        if (err) throw err;
+        if (err) throw err; // Throw error if any
 
+        // If no rows affected, then todo not updated
         if (!results.affectedRows) {
             return res.send({
                 success: false,
@@ -124,7 +141,10 @@ app.put('/todos/:id', (req, res) => {
             });
         }
 
+        // Delete cached data from Redis
         redisClient.del('todos');
+
+        // Return response
         return res.send({
             success: true,
             message: 'Todo updated successfully!',
@@ -137,10 +157,12 @@ app.put('/todos/:id', (req, res) => {
     });
 });
 
+// Delete todo
 app.delete('/todos/:id', (req, res) => {
     DB.query('DELETE FROM todos WHERE id = ?', [req.params.id], (err, results) => {
-        if (err) throw err;
+        if (err) throw err; // Throw error if any
 
+        // If no rows affected, then todo not deleted
         if (!results.affectedRows) {
             return res.send({
                 success: false,
@@ -149,7 +171,10 @@ app.delete('/todos/:id', (req, res) => {
             });
         }
 
+        // Delete cached data from Redis
         redisClient.del('todos');
+
+        // Return response
         return res.send({
             success: true,
             message: 'Todo deleted successfully!'
@@ -157,8 +182,10 @@ app.delete('/todos/:id', (req, res) => {
     });
 });
 
+// Start server
+const port = 5000;
 
-let port = 5000;
+// Listen on port
 app.listen(port, () => {
     console.log(`Running at - http://localhost:${port}`);
 });
